@@ -509,3 +509,22 @@ a:hover { text-decoration: underline; }
   overflow-y: auto;
   line-height: 1.55;
 }
+/* Blog / News secondary CTA button */
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  padding: 0.65rem 1.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-secondary:hover {
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+}
