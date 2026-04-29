@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Webhooks – NexusBoard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="app-page">
+  <nav class="appnav">
+    <div class="brand">NexusBoard</div>
+    <div class="nav-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Profile</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+  <div class="app-container narrow">
+    <h1>Webhook Tester</h1>
+    <p class="hint-text">Test your webhook endpoints. Enter a URL and NexusBoard will ping it and show the response.</p>
+    <form method="POST" action="/webhooks/test">
+      <div class="field">
+        <label>Webhook URL</label>
+        <input type="text" name="url" placeholder="https://your-service.com/webhook" value="">
+      </div>
+      <button type="submit" class="btn-primary">Test Webhook</button>
+    </form>
+    <% if (error) { %>
+      <div class="alert-error"><%= error %></div>
+    <% } %>
+    <% if (result) { %>
+      <div class="webhook-result">
+        <div class="result-label">Response:</div>
+        <pre class="result-pre"><%= result %></pre>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

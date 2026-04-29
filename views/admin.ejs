@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin – NexusBoard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="app-page">
+  <nav class="appnav">
+    <div class="brand">NexusBoard</div>
+    <div class="nav-links">
+      <span class="role-badge role-admin">admin</span>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+  <div class="app-container">
+    <h1>Admin Panel</h1>
+    <p class="hint-text">Authenticated as: <strong><%= decoded.username %></strong> (<%= decoded.role %>)</p>
+
+    <div class="admin-section">
+      <h2>System Configuration</h2>
+      <table class="admin-table">
+        <thead><tr><th>Key</th><th>Value</th></tr></thead>
+        <tbody>
+          <% config.forEach(c => { %>
+            <tr>
+              <td><%= c.key %></td>
+              <td><%= c.value %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="admin-section">
+      <h2>Users</h2>
+      <table class="admin-table">
+        <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th></tr></thead>
+        <tbody>
+          <% users.forEach(u => { %>
+            <tr>
+              <td><%= u.id %></td>
+              <td><a href="/profile/view/<%= u.id %>"><%= u.username %></a></td>
+              <td><span class="role-badge role-<%= u.role %>"><%= u.role %></span></td>
+              <td><%= u.created_at %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="admin-section">
+      <h2>Audit Log</h2>
+      <table class="admin-table">
+        <thead><tr><th>ID</th><th>User</th><th>Action</th><th>Detail</th><th>Time</th></tr></thead>
+        <tbody>
+          <% logs.forEach(l => { %>
+            <tr>
+              <td><%= l.id %></td>
+              <td><%= l.user_id %></td>
+              <td><%= l.action %></td>
+              <td><%= l.detail %></td>
+              <td><%= l.ts %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

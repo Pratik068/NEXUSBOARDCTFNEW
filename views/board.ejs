@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= board.title %> – NexusBoard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="app-page">
+  <nav class="appnav">
+    <div class="brand">NexusBoard</div>
+    <div class="nav-links">
+      <span class="role-badge role-<%= role %>"><%= role %></span>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Profile</a>
+      <% if (role === 'member' || role === 'admin') { %><a href="/webhooks">Webhooks</a><% } %>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+  <div class="app-container">
+    <a href="/dashboard" class="back-link">← Back</a>
+    <div class="board-view">
+      <div class="board-view-header">
+        <h1><%= board.title %></h1>
+        <span class="board-vis board-vis-<%= board.visibility %>"><%= board.visibility %></span>
+      </div>
+      <div class="board-meta">Created by <%= board.owner %> · <%= board.created_at %></div>
+      <div class="board-content"><%= board.content %></div>
+    </div>
+  </div>
+</body>
+</html>

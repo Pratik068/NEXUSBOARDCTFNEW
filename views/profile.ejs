@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile – NexusBoard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="app-page">
+  <nav class="appnav">
+    <div class="brand">NexusBoard</div>
+    <div class="nav-links">
+      <span class="role-badge role-<%= role %>"><%= role %></span>
+      <a href="/dashboard">Dashboard</a>
+      <% if (role === 'member' || role === 'admin') { %><a href="/webhooks">Webhooks</a><% } %>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+  <div class="app-container narrow">
+    <h1>Edit Profile</h1>
+    <p class="hint-text">Customize your public profile. Your bio supports basic formatting.</p>
+    <form method="POST" action="/profile">
+      <div class="field">
+        <label>Bio</label>
+        <textarea name="bio" rows="5" placeholder="Tell the team about yourself..."><%= bio %></textarea>
+      </div>
+      <button type="submit" class="btn-primary">Save Profile</button>
+    </form>
+  </div>
+</body>
+</html>

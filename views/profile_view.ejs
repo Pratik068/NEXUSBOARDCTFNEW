@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= targetUsername %>'s Profile – NexusBoard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="app-page">
+  <nav class="appnav">
+    <div class="brand">NexusBoard</div>
+    <div class="nav-links">
+      <span class="role-badge role-<%= role %>"><%= role %></span>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Edit Profile</a>
+      <% if (role === 'member' || role === 'admin') { %><a href="/webhooks">Webhooks</a><% } %>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+  <div class="app-container narrow">
+    <div class="profile-card">
+      <div class="profile-avatar"><%= targetUsername.charAt(0).toUpperCase() %></div>
+      <div class="profile-info">
+        <h2><%= targetUsername %></h2>
+        <span class="role-badge role-<%= targetRole %>"><%= targetRole %></span>
+      </div>
+      <div class="profile-bio"><%- renderedBio %></div>
+    </div>
+  </div>
+</body>
+</html>

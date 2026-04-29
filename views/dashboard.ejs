@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard – NexusBoard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="app-page">
+  <nav class="appnav">
+    <div class="brand">NexusBoard</div>
+    <div class="nav-links">
+      <span class="role-badge role-<%= role %>"><%= role %></span>
+      <a href="/profile">Profile</a>
+      <% if (role === 'member' || role === 'admin') { %>
+        <a href="/webhooks">Webhooks</a>
+      <% } %>
+      <% if (role === 'admin') { %>
+        <a href="/admin">Admin</a>
+      <% } %>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+  <div class="app-container">
+    <div class="page-header">
+      <h1>Your Boards</h1>
+      <a href="/board/new" class="btn-primary small">+ New Board</a>
+    </div>
+    <div class="board-grid">
+      <% boards.forEach(b => { %>
+        <a href="/board/<%= b.id %>" class="board-card">
+          <div class="board-card-header">
+            <span class="board-vis board-vis-<%= b.visibility %>"><%= b.visibility %></span>
+          </div>
+          <div class="board-title"><%= b.title %></div>
+          <div class="board-meta">by <%= b.owner %></div>
+        </a>
+      <% }) %>
+      <% if (boards.length === 0) { %>
+        <div class="empty-state">No boards yet. Create one!</div>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>

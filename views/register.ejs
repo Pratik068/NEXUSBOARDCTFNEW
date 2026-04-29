@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register – NexusBoard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-box">
+    <div class="auth-logo">NexusBoard</div>
+    <h2>Create Account</h2>
+    <% if (error) { %>
+      <div class="alert-error"><%= error %></div>
+    <% } %>
+    <form method="POST" action="/register">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" name="username" autocomplete="off" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" name="password" required>
+      </div>
+      <button type="submit" class="btn-primary full">Create Account</button>
+    </form>
+    <p class="auth-alt">Have an account? <a href="/login">Sign In</a></p>
+  </div>
+</body>
+</html>
