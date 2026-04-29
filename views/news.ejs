@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusBoard – Blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="app-page">
+  <nav class="appnav">
+    <div class="brand">NexusBoard</div>
+    <div class="nav-links">
+      <% if (user) { %>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/logout">Logout</a>
+      <% } else { %>
+        <a href="/login">Login</a>
+      <% } %>
+    </div>
+  </nav>
+
+  <div class="app-container">
+
+    <% if (!post) { %>
+      <!-- Post listing page -->
+      <h1>NexusBoard Blog</h1>
+      <p class="hint-text">Product updates, engineering notes, and announcements from the NexusBoard team.</p>
+
+      <div class="board-list">
+        <a href="/news?post=1" class="board-card">
+          <div class="bc-title">Webhooks Are Here</div>
+          <div class="bc-meta">Engineering · April 2024</div>
+          <p class="bc-excerpt">NexusBoard v2.1 ships with a built-in webhook tester. Send outbound HTTP requests directly from your workspace and inspect the live response in your browser.</p>
+        </a>
+        <a href="/news?post=2" class="board-card">
+          <div class="bc-title">Introducing Private Boards</div>
+          <div class="bc-meta">Product · March 2024</div>
+          <p class="bc-excerpt">Keep sensitive information out of the shared timeline. Private boards are visible only to their owner — perfect for drafts and admin notes.</p>
+        </a>
+        <a href="/news?post=3" class="board-card">
+          <div class="bc-title">v2.0 — New Collaboration Engine</div>
+          <div class="bc-meta">Release · January 2024</div>
+          <p class="bc-excerpt">A completely rewritten backend with faster board rendering, audit logging, and role-based access control out of the box.</p>
+        </a>
+      </div>
+
+    <% } else if (sqlError) { %>
+      <!-- SQL error reflection — injection confirmed -->
+      <div class="alert-sql">
+        <div class="sql-label">500 — Internal Server Error</div>
+        <pre class="sql-pre"><%= sqlError %></pre>
+      </div>
+      <p><a href="/news">&larr; Back to Blog</a></p>
+
+    <% } else if (injected) { %>
+      <!-- UNION injection output -->
+      <div class="alert-sql">
+        <div class="sql-label">Query returned <%= rows.length %> row(s):</div>
+        <pre class="sql-pre"><%= rows.map(r => Object.values(r).join('  |  ')).join('\n') %></pre>
+      </div>
+      <p><a href="/news">&larr; Back to Blog</a></p>
+
+    <% } else if (post) { %>
+      <!-- Normal post view -->
+      <div class="post-article">
+        <a href="/news" class="back-link">&larr; All Posts</a>
+        <div class="post-meta"><%= post.category %> · <%= post.published %></div>
+        <h1><%= post.title %></h1>
+        <div class="post-body"><%- post.body %></div>
+      </div>
+
+    <% } else { %>
+      <p class="hint-text">Post not found. <a href="/news">Back to Blog</a></p>
+    <% } %>
+
+  </div>
+
+  <footer class="footer">
+    <span>NexusBoard &copy; 2024 — Internal Platform</span>
+    <span class="footer-links"><a href="/api/status">Status</a> · <a href="/api/boards/public">Public API</a></span>
+  </footer>
+</body>
+</html>

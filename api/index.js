@@ -69,26 +69,7 @@ app.get('/', (req, res) =>
   renderView(res, 'index', { user: req.sess?.username || null }));
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  VULN 1 — SQL INJECTION (username field on /login)
-//
-//  Detection chain:
-//    '          → prepare() throws syntax error → HTTP 500, raw error shown
-//    ' ORDER BY 6--  → 0 rows, no error (valid, 6 cols exist)
-//    ' ORDER BY 7--  → prepare() throws "out of range" → HTTP 500
-//    ' UNION SELECT tbl_name,2,3,4,5,6 FROM sqlite_master WHERE type='table'-- 
-//               → rows returned, ALL reflected in yellow box
-//    ' UNION SELECT sql,2,3,4,5,6 FROM sqlite_master WHERE type='table' AND tbl_name='users'--
-//               → CREATE TABLE DDL reflected, reveals column names
-//    ' UNION SELECT username,password,3,4,5,6 FROM users--
-//               → credentials reflected, nexusadmin:Nx@dm1n_S3cur3! visible
-//
-//  Key design:
-//    - prepare() throws on bad SQL → caught, HTTP 500 + raw message shown
-//    - Valid injections return rows; we detect "injected" rows by checking
-//      whether id is a real INTEGER (typeof === 'number') vs a string value
-//      smuggled in from a UNION.  If ANY row has a non-integer id, we treat
-//      the whole result as an injection dump and reflect all rows.
-//    - Normal login: id is always a real integer → password check proceeds.
+//  /login — safe parameterized query (SQLi moved to /news?post=)
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/login', (req, res) =>
   renderView(res, 'login', { loginErr: null, sqlError: null }));
@@ -97,37 +78,18 @@ app.post('/login', async (req, res) => {
   const { username = '', password = '' } = req.body || {};
   const db = await getDb();
 
-  // ── Step 1: execute the vulnerable query ──────────────────────────────────
+  // Safe parameterized query — no injection possible here
   let rows;
   try {
-    // VULNERABLE: raw string interpolation — no sanitisation whatsoever
-    rows = dbAll(db, `SELECT * FROM users WHERE username = '${username}'`);
+    rows = dbAll(db, `SELECT * FROM users WHERE username = ?`, [username]);
   } catch (sqlErr) {
-    // prepare() threw — bad SQL syntax (single quote, ORDER BY out of range, etc.)
-    // Reflect the raw error message so the player knows injection is possible
     res.status(500);
     return renderView(res, 'login', {
       loginErr : null,
-      sqlError : `SQL Error: ${sqlErr.message}`
+      sqlError : 'An unexpected error occurred.'
     });
   }
 
-  // ── Step 2: detect whether this is a UNION injection ─────────────────────
-  // Real rows from the users table always have a numeric integer id.
-  // UNION-injected rows put arbitrary values in the id column (strings, etc.).
-  // We also reflect if more rows come back than could ever match one username.
-  const isInjected = rows.some(r => typeof r.id !== 'number') || rows.length > 1;
-
-  if (isInjected) {
-    // Reflect everything — this is what lets the player read dumped data
-    const lines = rows.map(r => Object.values(r).join('  |  ')).join('\n');
-    return renderView(res, 'login', {
-      loginErr : null,
-      sqlError : `Query returned ${rows.length} row(s):\n${lines}`
-    });
-  }
-
-  // ── Step 3: normal auth flow ──────────────────────────────────────────────
   if (!rows || rows.length === 0) {
     return renderView(res, 'login', {
       loginErr : 'Invalid credentials.',
@@ -137,7 +99,6 @@ app.post('/login', async (req, res) => {
 
   const user = rows[0];
 
-  // Plaintext comparison — passwords are stored in plaintext in this CTF
   if (String(user.password) !== String(password)) {
     return renderView(res, 'login', {
       loginErr : 'Invalid credentials.',
@@ -145,7 +106,6 @@ app.post('/login', async (req, res) => {
     });
   }
 
-  // ── Step 4: authenticated ─────────────────────────────────────────────────
   req.sess.userId   = user.id;
   req.sess.username = user.username;
   req.sess.role     = user.role;
@@ -159,6 +119,92 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => { req.sess.destroy(); res.redirect('/'); });
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  VULN 1 — SQL INJECTION (/news?post= parameter)
+//
+//  Detection chain:
+//    ?post=0'                → prepare() throws syntax error → HTTP 500, raw msg shown
+//    ?post=0 ORDER BY 6--   → valid (6 cols), no crash
+//    ?post=0 ORDER BY 7--   → prepare() throws "out of range" → HTTP 500
+//    ?post=0 UNION SELECT tbl_name,2,3,4,5,6 FROM sqlite_master WHERE type='table'--
+//               → rows reflected in yellow box
+//    ?post=0 UNION SELECT username,password,3,4,5,6 FROM users--
+//               → credentials reflected, nexusadmin:Nx@dm1n_S3cur3! visible
+//
+//  Normal lookup: integer id → blog post rendered normally
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BLOG_POSTS = {
+  1: {
+    id: 1, title: 'Webhooks Are Here', category: 'Engineering', published: 'April 2024',
+    body: `
+      <p>NexusBoard v2.1 ships with a built-in <strong>webhook tester</strong> — our most-requested feature since launch.</p>
+      <h2>What are webhooks?</h2>
+      <p>A webhook is an HTTP callback: when an event happens in one system, it sends an outbound HTTP POST to a URL you control. They're the glue that connects modern services — Slack notifications when a board is updated, Jira tickets when a sprint closes, custom analytics pipelines, and more.</p>
+      <h2>How it works in NexusBoard</h2>
+      <p>Navigate to <strong>/webhooks</strong> once logged in. Paste any URL into the tester field and hit <em>Test Webhook</em>. NexusBoard's backend will issue an HTTP GET to that URL and render the raw response in your browser — no curl required. The tester supports <code>http://</code> and <code>https://</code> targets out of the box.</p>
+      <h2>Coming soon</h2>
+      <p>Signed payloads, event filtering per board, and retry queues are on the roadmap for v2.2.</p>
+    `
+  },
+  2: {
+    id: 2, title: 'Introducing Private Boards', category: 'Product', published: 'March 2024',
+    body: `
+      <p>Not everything belongs on the shared timeline. <strong>Private boards</strong> are now available to all members.</p>
+      <p>When you create a board, choose <em>Private</em> from the visibility selector. Only you — the owner — will see it in the dashboard. Private boards are ideal for drafts, personal notes, and anything you're not ready to share with the team.</p>
+    `
+  },
+  3: {
+    id: 3, title: 'v2.0 — New Collaboration Engine', category: 'Release', published: 'January 2024',
+    body: `
+      <p>NexusBoard 2.0 is a complete rewrite. What's new: <strong>audit logging</strong>, role-based access (<code>admin</code>/<code>member</code>/<code>viewer</code>), faster EJS rendering with rich bio markup, and a public API surface at <code>/api/status</code>, <code>/api/boards/public</code>, and <code>/api/pubkey</code>.</p>
+    `
+  }
+};
+
+app.get('/news', async (req, res) => {
+  const raw = req.query.post;
+
+  // No ?post= parameter — show listing page
+  if (raw === undefined) {
+    return renderView(res, 'news', {
+      user: req.sess?.username || null,
+      post: null, rows: [], injected: false, sqlError: null
+    });
+  }
+
+  const db = await getDb();
+  let rows;
+  try {
+    // VULNERABLE: raw interpolation of ?post= value — no sanitisation whatsoever
+    rows = dbAll(db, `SELECT * FROM boards WHERE id = ${raw}`);
+  } catch (sqlErr) {
+    res.status(500);
+    return renderView(res, 'news', {
+      user: req.sess?.username || null,
+      post: null, rows: [], injected: false,
+      sqlError: `SQL Error: ${sqlErr.message}`
+    });
+  }
+
+  // Detect UNION injection: non-integer id column or unexpectedly many rows
+  const isInjected = rows.some(r => typeof r.id !== 'number') || rows.length > 1;
+  if (isInjected) {
+    return renderView(res, 'news', {
+      user: req.sess?.username || null,
+      post: null, rows, injected: true, sqlError: null
+    });
+  }
+
+  // Normal lookup — serve static blog content keyed by post id
+  const postId   = parseInt(raw, 10);
+  const blogPost = BLOG_POSTS[postId] || null;
+  renderView(res, 'news', {
+    user: req.sess?.username || null,
+    post: blogPost, rows: [], injected: false, sqlError: null
+  });
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Dashboard
